@@ -1,4 +1,4 @@
-﻿using MetalReleaseTracker.CatalogSyncService.Configurations;
+﻿using MetalReleaseTracker.SharedLibraries.Minio;
 using Microsoft.Extensions.Options;
 using Minio;
 

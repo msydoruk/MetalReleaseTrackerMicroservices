@@ -14,14 +14,14 @@ public class AlbumProcessedPublisherJob
 {
     private readonly ITopicProducer<AlbumProcessedPublicationEvent> _topicProducer;
     private readonly IAlbumProcessedRepository _albumProcessedRepository;
-    private readonly ILogger<AlbumProcessingJob> _logger;
+    private readonly ILogger<AlbumProcessedPublisherJob> _logger;
     private readonly AlbumProcessedPublisherJobSettings _processedPublisherJobSettings;
     private readonly IMapper _mapper;
 
     public AlbumProcessedPublisherJob(
         ITopicProducer<AlbumProcessedPublicationEvent> topicProducer,
         IAlbumProcessedRepository albumProcessedRepository,
-        ILogger<AlbumProcessingJob> logger,
+        ILogger<AlbumProcessedPublisherJob> logger,
         IOptions<AlbumProcessedPublisherJobSettings> options,
         IMapper mapper)
     {

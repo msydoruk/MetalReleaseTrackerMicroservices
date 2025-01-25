@@ -6,9 +6,7 @@ public class MongoDbConfig
 
     public string DatabaseName { get; set; }
 
-    public string ParsingSessionCollectionName { get; set; }
-
-    public string RawAlbumsCollectionName { get; set; }
+    public string ParsingSessionWithRawAlbumsCollectionName { get; set; }
 
     public int RawAlbumsCollectionTTL { get; set; }
 

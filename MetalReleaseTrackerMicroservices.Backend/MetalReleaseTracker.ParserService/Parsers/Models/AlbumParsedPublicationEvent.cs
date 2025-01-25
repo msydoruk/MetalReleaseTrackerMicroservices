@@ -12,5 +12,5 @@ public class AlbumParsedPublicationEvent
 
     public DistributorCode DistributorCode { get; set; }
 
-    public string StorageFilePath { get; set; }
+    public List<string> StorageFilePaths { get; set; }
 }

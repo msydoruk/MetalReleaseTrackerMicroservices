@@ -6,6 +6,10 @@ namespace MetalReleaseTracker.CatalogSyncService.Data.Entities;
 
 public class RawAlbumEntity : AlbumBaseEntity
 {
+    public RawAlbumEntity()
+    {
+    }
+
     public RawAlbumEntity(Guid id)
     {
         Id = id;

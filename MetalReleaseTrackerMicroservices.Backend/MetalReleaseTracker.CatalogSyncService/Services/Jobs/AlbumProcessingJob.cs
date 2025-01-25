@@ -11,23 +11,20 @@ namespace MetalReleaseTracker.CatalogSyncService.Services.Jobs;
 
 public class AlbumProcessingJob
 {
-    private readonly IParsingSessionRepository _parsingSessionRepository;
-    private readonly IRawAlbumRepository _rawAlbumRepository;
+    private readonly IParsingSessionWithRawAlbumsRepository _parsingSessionWithRawAlbumsRepository;
     private readonly IValidator<RawAlbumEntity> _rawAlbumValidator;
     private readonly IAlbumProcessedRepository _albumProcessedRepository;
     private readonly IMapper _mapper;
     private readonly ILogger<AlbumProcessingJob> _logger;
 
     public AlbumProcessingJob(
-        IParsingSessionRepository parsingSessionRepository,
-        IRawAlbumRepository rawAlbumRepository,
+        IParsingSessionWithRawAlbumsRepository parsingSessionWithRawAlbumsRepository,
         IValidator<RawAlbumEntity> rawAlbumValidator,
         IAlbumProcessedRepository albumProcessedRepository,
         IMapper mapper,
         ILogger<AlbumProcessingJob> logger)
     {
-        _parsingSessionRepository = parsingSessionRepository;
-        _rawAlbumRepository = rawAlbumRepository;
+        _parsingSessionWithRawAlbumsRepository = parsingSessionWithRawAlbumsRepository;
         _rawAlbumValidator = rawAlbumValidator;
         _albumProcessedRepository = albumProcessedRepository;
         _mapper = mapper;
@@ -39,16 +36,16 @@ public class AlbumProcessingJob
     {
         try
         {
-            var parsingSessions = await _parsingSessionRepository.GetUnProcessedAsync();
+            var parsingSessionWithRawAlbumsEntities = await _parsingSessionWithRawAlbumsRepository.GetUnProcessedAsync();
 
-            if (!parsingSessions.Any())
+            if (!parsingSessionWithRawAlbumsEntities.Any())
             {
                 _logger.LogInformation("No parsing sessions found.");
             }
 
-            foreach (var parsingSession in parsingSessions)
+            foreach (var parsingSessionWithRawAlbumsEntity in parsingSessionWithRawAlbumsEntities)
             {
-                await ProcessParsingSessionAsync(parsingSession, cancellationToken);
+                await ProcessParsingSessionWithRawAlbumsAsync(parsingSessionWithRawAlbumsEntity, cancellationToken);
             }
         }
         catch (Exception exception)
@@ -58,30 +55,29 @@ public class AlbumProcessingJob
         }
     }
 
-    private async Task ProcessParsingSessionAsync(ParsingSessionEntity parsingSession,
+    private async Task ProcessParsingSessionWithRawAlbumsAsync(
+        ParsingSessionWithRawAlbumsEntity parsingSessionWithRawAlbumsEntity,
         CancellationToken cancellationToken)
     {
         try
         {
-            var rawAlbumsForParsingSession =
-                await _rawAlbumRepository.GetBatchByParsingSessionIdAsync(parsingSession.Id);
-
+            var rawAlbumsForParsingSession = parsingSessionWithRawAlbumsEntity.RawAlbums;
             foreach (var rawAlbum in rawAlbumsForParsingSession)
             {
                 await ProcessRawAlbumAsync(rawAlbum, cancellationToken);
             }
 
             var skusForParsingSession = new HashSet<string>(rawAlbumsForParsingSession.Select(album => album.SKU));
-            await MarkDeletedAlbumsByDistributorAsync(parsingSession.DistributorCode, skusForParsingSession, cancellationToken);
-            await _parsingSessionRepository.UpdateProcessingStatusAsync(parsingSession.Id, ParsingSessionProcessingStatus.Processed);
+            await MarkDeletedAlbumsByDistributorAsync(parsingSessionWithRawAlbumsEntity.DistributorCode, skusForParsingSession, cancellationToken);
+            await _parsingSessionWithRawAlbumsRepository.UpdateProcessingStatusAsync(parsingSessionWithRawAlbumsEntity.Id, ParsingSessionProcessingStatus.Processed);
 
-            _logger.LogInformation($"Processed {parsingSession.Id}.");
+            _logger.LogInformation($"Processed {parsingSessionWithRawAlbumsEntity.Id}.");
         }
         catch (Exception exception)
         {
-            await _parsingSessionRepository.UpdateProcessingStatusAsync(parsingSession.Id, ParsingSessionProcessingStatus.Failed);
+            await _parsingSessionWithRawAlbumsRepository.UpdateProcessingStatusAsync(parsingSessionWithRawAlbumsEntity.Id, ParsingSessionProcessingStatus.Failed);
 
-            _logger.LogError(exception, $"Error processing Parsing Session: {parsingSession.Id}");
+            _logger.LogError(exception, $"Error processing Parsing Session: {parsingSessionWithRawAlbumsEntity.Id}");
             throw;
         }
     }

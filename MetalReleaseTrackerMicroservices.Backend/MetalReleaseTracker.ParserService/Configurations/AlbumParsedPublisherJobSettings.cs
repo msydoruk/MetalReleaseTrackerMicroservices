@@ -2,5 +2,5 @@
 
 public class AlbumParsedPublisherJobSettings
 {
-    public int BatchSize { get; set; }
+    public int MaxChunkSizeInBytes { get; set; }
 }

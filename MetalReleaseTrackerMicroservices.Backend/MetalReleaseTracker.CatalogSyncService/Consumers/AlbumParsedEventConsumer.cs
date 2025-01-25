@@ -1,28 +1,25 @@
-﻿using MassTransit;
+﻿using System.Text;
+using MassTransit;
 using MetalReleaseTracker.CatalogSyncService.Data.Entities;
-using MetalReleaseTracker.CatalogSyncService.Data.Entities.Enums;
 using MetalReleaseTracker.CatalogSyncService.Data.Events;
-using MetalReleaseTracker.CatalogSyncService.Data.FileStorage.Interfaces;
 using MetalReleaseTracker.CatalogSyncService.Data.Repositories.Interfaces;
+using MetalReleaseTracker.SharedLibraries.Minio;
 using JsonConvert = Newtonsoft.Json.JsonConvert;
 
 namespace MetalReleaseTracker.CatalogSyncService.Consumers;
 
 public class AlbumParsedEventConsumer : IConsumer<AlbumParsedPublicationEvent>
 {
-    private readonly IParsingSessionRepository _parsingSessionRepository;
-    private readonly IRawAlbumRepository _rawAlbumRepository;
+    private readonly IParsingSessionWithRawAlbumsRepository _parsingSessionWithRawAlbumsRepository;
     private readonly IFileStorageService _fileStorageService;
     private ILogger<AlbumParsedEventConsumer> _logger;
 
     public AlbumParsedEventConsumer(
-        IParsingSessionRepository parsingSessionRepository,
-        IRawAlbumRepository rawAlbumRepository,
+        IParsingSessionWithRawAlbumsRepository parsingSessionWithRawAlbumsRepository,
         IFileStorageService fileStorageService,
         ILogger<AlbumParsedEventConsumer> logger)
     {
-        _parsingSessionRepository = parsingSessionRepository;
-        _rawAlbumRepository = rawAlbumRepository;
+        _parsingSessionWithRawAlbumsRepository = parsingSessionWithRawAlbumsRepository;
         _fileStorageService = fileStorageService;
         _logger = logger;
     }
@@ -33,18 +30,23 @@ public class AlbumParsedEventConsumer : IConsumer<AlbumParsedPublicationEvent>
         {
             var albumParsedPublicationEvent = context.Message;
 
-            var parsingSessionEntity = new ParsingSessionEntity
+            var rawAlbumJson = new StringBuilder();
+            foreach (var storageFilePath in albumParsedPublicationEvent.StorageFilePaths)
+            {
+                rawAlbumJson.Append(await _fileStorageService.DownloadFileAsync(storageFilePath));
+            }
+
+            var rawAlbumEntities = JsonConvert.DeserializeObject<List<RawAlbumEntity>>(rawAlbumJson.ToString());
+
+            var parsingSessionWithRawAlbumsEntity = new ParsingSessionWithRawAlbumsEntity
             {
                 Id = albumParsedPublicationEvent.ParsingSessionId,
                 DistributorCode = albumParsedPublicationEvent.DistributorCode,
-                CreatedDate = albumParsedPublicationEvent.CreatedDate
+                CreatedDate = albumParsedPublicationEvent.CreatedDate,
+                RawAlbums = rawAlbumEntities
             };
-            var rawAlbumJson = await _fileStorageService.DownloadFileAsync(albumParsedPublicationEvent.StorageFilePath);
-            var rawAlbumEntities = JsonConvert.DeserializeObject<List<RawAlbumEntity>>(rawAlbumJson);
 
-            await _parsingSessionRepository.AddAsync(parsingSessionEntity);
-            await _rawAlbumRepository.AddAsync(rawAlbumEntities);
-            await _parsingSessionRepository.UpdateProcessingStatusAsync(albumParsedPublicationEvent.ParsingSessionId, ParsingSessionProcessingStatus.Commited);
+            await _parsingSessionWithRawAlbumsRepository.AddAsync(parsingSessionWithRawAlbumsEntity);
 
             _logger.LogInformation($"Created new parsing session and added albums to raw collection. Distributor: {albumParsedPublicationEvent.DistributorCode}.");
         }

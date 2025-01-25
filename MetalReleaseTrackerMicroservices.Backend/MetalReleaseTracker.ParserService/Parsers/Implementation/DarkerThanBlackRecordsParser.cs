@@ -17,12 +17,8 @@ public class DarkerThanBlackRecordsParser : IParser
         _logger = logger;
     }
 
-    public async IAsyncEnumerable<AlbumParsedEvent> ParseAsync(string parsingUrl, CancellationToken cancellationToken)
+    public async Task<PageParsedResult> ParseAsync(string parsingUrl, CancellationToken cancellationToken)
     {
-        yield return new AlbumParsedEvent
-        {
-            DistributorCode = DistributorCode,
-            Name = "Test album Darker Than Black Records"
-        };
+        return new PageParsedResult();
     }
 }

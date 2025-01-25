@@ -6,6 +6,8 @@ namespace MetalReleaseTracker.ParserService.Data.Repositories.Interfaces;
 
 public interface IParsingSessionRepository
 {
+    Task<ParsingSessionEntity?> GetById(Guid id, CancellationToken cancellationToken);
+
     Task<ParsingSessionEntity?> GetIncompleteAsync(DistributorCode distributorCode, CancellationToken cancellationToken);
 
     Task<List<ParsingSessionEntity>> GetParsedAsync(CancellationToken cancellationToken);

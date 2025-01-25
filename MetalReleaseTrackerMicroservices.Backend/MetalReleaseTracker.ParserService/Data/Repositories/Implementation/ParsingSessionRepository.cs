@@ -17,13 +17,18 @@ public class ParsingSessionRepository : IParsingSessionRepository
         _logger = logger;
     }
 
+    public Task<ParsingSessionEntity?> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        return _context.ParsingSessions.FirstOrDefaultAsync(state => state.Id == id, cancellationToken);
+    }
+
     public async Task<ParsingSessionEntity?> GetIncompleteAsync(DistributorCode distributorCode, CancellationToken cancellationToken)
     {
-        var parsingState = await _context.ParsingSessions.FirstOrDefaultAsync(
+        var parsingSessionEntity = await _context.ParsingSessions.FirstOrDefaultAsync(
             state => state.DistributorCode == distributorCode && state.ParsingStatus == AlbumParsingStatus.Incomplete,
             cancellationToken);
 
-        return parsingState;
+        return parsingSessionEntity;
     }
 
     public async Task<List<ParsingSessionEntity>> GetParsedAsync(CancellationToken cancellationToken)
@@ -35,7 +40,7 @@ public class ParsingSessionRepository : IParsingSessionRepository
 
     public async Task<ParsingSessionEntity> AddAsync(DistributorCode distributorCode, string nextPageToProcess, CancellationToken cancellationToken)
     {
-        var parsingStateEntity = new ParsingSessionEntity
+        var parsingSessionEntity = new ParsingSessionEntity
         {
             Id = Guid.NewGuid(),
             DistributorCode = distributorCode,
@@ -43,25 +48,25 @@ public class ParsingSessionRepository : IParsingSessionRepository
             LastUpdatedDate = DateTime.UtcNow
         };
 
-        await _context.ParsingSessions.AddAsync(parsingStateEntity, cancellationToken);
+        await _context.ParsingSessions.AddAsync(parsingSessionEntity, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return parsingStateEntity;
+        return parsingSessionEntity;
     }
 
     public async Task<bool> UpdateNextPageToProcessAsync(Guid id, string nextPageToProcess, CancellationToken cancellationToken)
     {
-        var parsingState = await _context.ParsingSessions.FirstOrDefaultAsync(state => state.Id == id, cancellationToken);
+        var parsingSessionEntity = await _context.ParsingSessions.FirstOrDefaultAsync(state => state.Id == id, cancellationToken);
 
-        if (parsingState == null)
+        if (parsingSessionEntity == null)
         {
             return false;
         }
 
-        parsingState.PageToProcess = nextPageToProcess;
-        parsingState.LastUpdatedDate = DateTime.UtcNow;
+        parsingSessionEntity.PageToProcess = nextPageToProcess;
+        parsingSessionEntity.LastUpdatedDate = DateTime.UtcNow;
 
-        _context.ParsingSessions.Update(parsingState);
+        _context.ParsingSessions.Update(parsingSessionEntity);
         await _context.SaveChangesAsync(cancellationToken);
 
         return true;
@@ -69,17 +74,17 @@ public class ParsingSessionRepository : IParsingSessionRepository
 
     public async Task<bool> UpdateParsingStatus(Guid id, AlbumParsingStatus parsingStatus, CancellationToken cancellationToken)
     {
-        var parsingState = await _context.ParsingSessions.FirstOrDefaultAsync(state => state.Id == id, cancellationToken);
+        var parsingSessionEntity = await _context.ParsingSessions.FirstOrDefaultAsync(state => state.Id == id, cancellationToken);
 
-        if (parsingState == null)
+        if (parsingSessionEntity == null)
         {
             return false;
         }
 
-        parsingState.ParsingStatus = parsingStatus;
-        parsingState.LastUpdatedDate = DateTime.UtcNow;
+        parsingSessionEntity.ParsingStatus = parsingStatus;
+        parsingSessionEntity.LastUpdatedDate = DateTime.UtcNow;
 
-        _context.ParsingSessions.Update(parsingState);
+        _context.ParsingSessions.Update(parsingSessionEntity);
         await _context.SaveChangesAsync(cancellationToken);
 
         return true;

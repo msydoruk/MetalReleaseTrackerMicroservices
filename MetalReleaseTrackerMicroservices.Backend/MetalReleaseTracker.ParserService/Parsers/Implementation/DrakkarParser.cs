@@ -18,12 +18,8 @@ public class DrakkarParser : IParser
         _logger = logger;
     }
 
-    public async IAsyncEnumerable<AlbumParsedEvent> ParseAsync(string parsingUrl, CancellationToken cancellationToken)
+    public async Task<PageParsedResult> ParseAsync(string parsingUrl, CancellationToken cancellationToken)
     {
-        yield return new AlbumParsedEvent
-        {
-            DistributorCode = DistributorCode,
-            Name = "Test Album Drakkar"
-        };
+        return new PageParsedResult();
     }
 }

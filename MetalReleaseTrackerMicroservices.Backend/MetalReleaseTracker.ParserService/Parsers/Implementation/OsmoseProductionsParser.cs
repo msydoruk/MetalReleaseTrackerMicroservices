@@ -16,7 +16,6 @@ public class OsmoseProductionsParser : IParser
     {
         private readonly IHtmlDocumentLoader _htmlDocumentLoader;
         private readonly GeneralParserSettings _generalParserSettings;
-        private readonly IParsingSessionRepository _parsingSessionRepository;
         private readonly ILogger<OsmoseProductionsParser> _logger;
 
         public DistributorCode DistributorCode => DistributorCode.OsmoseProductions;
@@ -29,60 +28,31 @@ public class OsmoseProductionsParser : IParser
         {
             _htmlDocumentLoader = htmlDocumentLoader;
             _generalParserSettings = generalParserSettings.Value;
-            _parsingSessionRepository = parsingSessionRepository;
             _logger = logger;
         }
 
-        public async IAsyncEnumerable<AlbumParsedEvent> ParseAsync(string parsingUrl,
-            [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async Task<PageParsedResult> ParseAsync(string parsingUrl, CancellationToken cancellationToken)
         {
-            var parsingSession = await _parsingSessionRepository.GetIncompleteAsync(DistributorCode, cancellationToken);
-
             var nextPageUrl = parsingUrl;
-            if (parsingSession == null)
+            var htmlDocument = await LoadHtmlDocument(nextPageUrl, cancellationToken);
+            var albumUrls = ParseAlbumUrls(htmlDocument, cancellationToken);
+
+            var parsedAlbums = new List<AlbumParsedEvent>();
+            foreach (var albumUrl in albumUrls)
             {
-                parsingSession = await _parsingSessionRepository.AddAsync(DistributorCode, nextPageUrl, cancellationToken);
+                AlbumParsedEvent albumParsedEvent = await ParseAlbumDetails(albumUrl, cancellationToken);
+                parsedAlbums.Add(albumParsedEvent);
             }
-            else
+
+            (nextPageUrl, bool hasMorePages) = GetNextPageUrl(htmlDocument);
+
+            await Task.Delay(_generalParserSettings.PageDelayMilliseconds, cancellationToken);
+
+            return new PageParsedResult
             {
-                nextPageUrl = parsingSession.PageToProcess;
-                _logger.LogInformation($"Restored parsing url {nextPageUrl} from state.");
-            }
-
-            _logger.LogInformation($"Starting album parsing from distributor URL: {nextPageUrl}.");
-
-            bool hasMorePages = false;
-            var totalParsedAlbumsCount = 0;
-            do
-            {
-                _logger.LogInformation($"Parsing albums from URL: {nextPageUrl}.");
-                var htmlDocument = await LoadHtmlDocument(nextPageUrl, cancellationToken);
-                var albumUrls = ParseAlbumUrls(htmlDocument, cancellationToken);
-
-                foreach (var albumUrl in albumUrls)
-                {
-                    AlbumParsedEvent albumParsedEvent = await ParseAlbumDetails(albumUrl, cancellationToken);
-                    albumParsedEvent.ParsingSessionId = parsingSession.Id;
-
-                    yield return albumParsedEvent;
-
-                    totalParsedAlbumsCount++;
-                }
-
-                (nextPageUrl, hasMorePages) = GetNextPageUrl(htmlDocument);
-
-                if (hasMorePages)
-                {
-                    await _parsingSessionRepository.UpdateNextPageToProcessAsync(parsingSession.Id, nextPageUrl, cancellationToken);
-                }
-
-                await Task.Delay(_generalParserSettings.PageDelayMilliseconds, cancellationToken);
-            }
-            while (hasMorePages);
-
-            await _parsingSessionRepository.UpdateParsingStatus(parsingSession.Id, AlbumParsingStatus.Parsed, cancellationToken);
-
-            _logger.LogInformation($"Completed album parsing from distributor URL: {parsingUrl}. Total albums parsed: {totalParsedAlbumsCount}.");
+                ParsedAlbums = parsedAlbums,
+                NextPageUrl = hasMorePages ? nextPageUrl : null
+            };
         }
 
         private List<string> ParseAlbumUrls(HtmlDocument htmlDocument, CancellationToken cancellationToken)

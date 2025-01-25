@@ -2,7 +2,6 @@
 using MassTransit;
 using MetalReleaseTracker.CatalogSyncService.Configurations;
 using MetalReleaseTracker.CatalogSyncService.Consumers;
-using MetalReleaseTracker.CatalogSyncService.Data.Entities;
 using MetalReleaseTracker.CatalogSyncService.Data.Events;
 
 namespace MetalReleaseTracker.CatalogSyncService.ServiceExtensions;

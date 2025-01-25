@@ -3,7 +3,6 @@
 public enum ParsingSessionProcessingStatus
 {
     Pending,
-    Commited,
     Processed,
     Failed
 }

@@ -4,11 +4,11 @@ using MongoDB.Driver;
 
 namespace MetalReleaseTracker.CatalogSyncService.Data.Repositories.Interfaces;
 
-public interface IParsingSessionRepository
+public interface IParsingSessionWithRawAlbumsRepository
 {
-    Task<List<ParsingSessionEntity>> GetUnProcessedAsync();
+    Task<List<ParsingSessionWithRawAlbumsEntity>> GetUnProcessedAsync();
 
-    Task AddAsync(ParsingSessionEntity parsingSessionEntity);
+    Task AddAsync(ParsingSessionWithRawAlbumsEntity parsingSessionEntity);
 
     Task UpdateProcessingStatusAsync(Guid id, ParsingSessionProcessingStatus processingStatus);
 }

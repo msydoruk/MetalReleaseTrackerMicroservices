@@ -2,8 +2,6 @@ using FluentValidation;
 using Hangfire;
 using Hangfire.PostgreSql;
 using MetalReleaseTracker.CatalogSyncService.Data.Entities;
-using MetalReleaseTracker.CatalogSyncService.Data.FileStorage;
-using MetalReleaseTracker.CatalogSyncService.Data.FileStorage.Interfaces;
 using MetalReleaseTracker.CatalogSyncService.Data.MappingProfiles;
 using MetalReleaseTracker.CatalogSyncService.Data.Repositories.Implementation;
 using MetalReleaseTracker.CatalogSyncService.Data.Repositories.Interfaces;
@@ -11,6 +9,7 @@ using MetalReleaseTracker.CatalogSyncService.Data.Validators;
 using MetalReleaseTracker.CatalogSyncService.ServiceExtensions;
 using MetalReleaseTracker.CatalogSyncService.Services;
 using MetalReleaseTracker.CatalogSyncService.Services.Jobs;
+using MetalReleaseTracker.SharedLibraries.Minio;
 using Microsoft.AspNetCore.Builder;
 using Serilog;
 
@@ -28,8 +27,7 @@ builder.Services.AddHangfireServer();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 builder.Services.AddTransient<IValidator<RawAlbumEntity>, RawAlbumEntityValidator>();
-builder.Services.AddScoped<IParsingSessionRepository, ParsingSessionRepository>();
-builder.Services.AddScoped<IRawAlbumRepository, RawAlbumRepository>();
+builder.Services.AddScoped<IParsingSessionWithRawAlbumsRepository, ParsingSessionWithRawAlbumsRepository>();
 builder.Services.AddScoped<IAlbumProcessedRepository, AlbumProcessedRepository>();
 
 builder.Services.AddScoped<IFileStorageService, MinioFileStorageService>();
