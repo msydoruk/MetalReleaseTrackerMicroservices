@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
 builder.Host.UseSerilog();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
-
+builder.Services.AddControllers();
 builder.Services.AddKafka(builder.Configuration);
 
 builder.Services.AddScoped<IAlbumRepository, AlbumRepository>();
@@ -24,6 +24,8 @@ builder.Services.AddDbContext<CoreDataServiceDbContext>(options =>
 });
 
 var app = builder.Build();
+
+app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
