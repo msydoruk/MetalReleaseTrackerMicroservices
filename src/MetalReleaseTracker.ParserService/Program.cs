@@ -1,6 +1,5 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using MetalReleaseTracker.ParserService.Aplication.Services;
 using MetalReleaseTracker.ParserService.Domain.Interfaces;
 using MetalReleaseTracker.ParserService.Infrastructure.Common.Extensions;
 using MetalReleaseTracker.ParserService.Infrastructure.Data;
@@ -82,7 +81,6 @@ builder.Services.AddScoped<CatalogueIndexJob>();
 builder.Services.AddScoped<AlbumDetailParsingJob>();
 builder.Services.AddScoped<AlbumParsedPublisherJob>();
 builder.Services.AddScoped<TickerQJobFunctions>();
-builder.Services.AddHostedService<TickerQSchedulerService>();
 
 var app = builder.Build();
 

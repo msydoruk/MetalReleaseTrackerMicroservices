@@ -1,5 +1,6 @@
 using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using TickerQ.Utilities.Base;
+using TickerQ.Utilities.Enums;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Jobs;
 
@@ -22,7 +23,7 @@ public class TickerQJobFunctions
         _albumParsedPublisherJob = albumParsedPublisherJob;
     }
 
-    [TickerFunction("BandReferenceSyncJob")]
+    [TickerFunction("BandReferenceSyncJob", "0 0 0 * * 0", TickerTaskPriority.LongRunning)]
     public async Task RunBandReferenceSyncJob(
         TickerFunctionContext context,
         CancellationToken cancellationToken)
@@ -31,7 +32,7 @@ public class TickerQJobFunctions
         await _bandReferenceSyncJob.RunSyncJob(cancellationToken);
     }
 
-    [TickerFunction("CatalogueIndexJob")]
+    [TickerFunction("CatalogueIndexJob", TickerTaskPriority.LongRunning)]
     public async Task RunCatalogueIndexJob(
         TickerFunctionContext<ParserDataSource> context,
         CancellationToken cancellationToken)
@@ -40,7 +41,7 @@ public class TickerQJobFunctions
         await _catalogueIndexJob.RunCatalogueIndexJob(context.Request, cancellationToken);
     }
 
-    [TickerFunction("AlbumDetailParsingJob")]
+    [TickerFunction("AlbumDetailParsingJob", TickerTaskPriority.LongRunning)]
     public async Task RunAlbumDetailParsingJob(
         TickerFunctionContext<ParserDataSource> context,
         CancellationToken cancellationToken)
@@ -49,7 +50,7 @@ public class TickerQJobFunctions
         await _albumDetailParsingJob.RunDetailParsingJob(context.Request, cancellationToken);
     }
 
-    [TickerFunction("AlbumParsedPublisherJob")]
+    [TickerFunction("AlbumParsedPublisherJob", "0 0 */6 * * *")]
     public async Task RunAlbumParsedPublisherJob(
         TickerFunctionContext context,
         CancellationToken cancellationToken)

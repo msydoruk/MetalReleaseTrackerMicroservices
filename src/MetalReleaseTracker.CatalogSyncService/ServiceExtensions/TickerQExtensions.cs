@@ -1,5 +1,6 @@
 using MetalReleaseTracker.CatalogSyncService.Data;
 using MetalReleaseTracker.CatalogSyncService.Data.Entities;
+using MetalReleaseTracker.CatalogSyncService.Services.Jobs;
 using Microsoft.EntityFrameworkCore;
 using TickerQ.Dashboard.DependencyInjection;
 using TickerQ.DependencyInjection;
@@ -31,6 +32,9 @@ public static class TickerQExtensions
                 schedulerOptions.FallbackIntervalChecker = TimeSpan.FromSeconds(30);
                 schedulerOptions.SchedulerTimeZone = TimeZoneInfo.Utc;
             });
+
+            tickerOptions.UseGZipCompression();
+            tickerOptions.SetExceptionHandler<TickerQExceptionHandler>();
 
             if (dashboardEnabled)
             {

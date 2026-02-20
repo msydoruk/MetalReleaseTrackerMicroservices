@@ -6,7 +6,6 @@ using MetalReleaseTracker.CatalogSyncService.Data.Repositories.Implementation;
 using MetalReleaseTracker.CatalogSyncService.Data.Repositories.Interfaces;
 using MetalReleaseTracker.CatalogSyncService.Data.Validators;
 using MetalReleaseTracker.CatalogSyncService.ServiceExtensions;
-using MetalReleaseTracker.CatalogSyncService.Services;
 using MetalReleaseTracker.CatalogSyncService.Services.Jobs;
 using MetalReleaseTracker.SharedLibraries.Minio;
 using Microsoft.AspNetCore.Builder;
@@ -60,7 +59,6 @@ builder.Services.AddScoped<IFileStorageService, MinioFileStorageService>();
 builder.Services.AddTransient<AlbumProcessingJob>();
 builder.Services.AddTransient<AlbumProcessedPublisherJob>();
 builder.Services.AddScoped<TickerQJobFunctions>();
-builder.Services.AddHostedService<CatalogSyncSchedulerService>();
 
 var app = builder.Build();
 
