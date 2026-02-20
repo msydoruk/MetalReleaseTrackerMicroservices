@@ -1,4 +1,5 @@
 using TickerQ.Utilities.Base;
+using TickerQ.Utilities.Enums;
 
 namespace MetalReleaseTracker.CatalogSyncService.Services.Jobs;
 
@@ -15,7 +16,7 @@ public class TickerQJobFunctions
         _albumProcessedPublisherJob = albumProcessedPublisherJob;
     }
 
-    [TickerFunction("AlbumProcessingJob")]
+    [TickerFunction("AlbumProcessingJob", "0 0 */4 * * *", TickerTaskPriority.LongRunning)]
     public async Task RunAlbumProcessingJob(
         TickerFunctionContext context,
         CancellationToken cancellationToken)
@@ -24,7 +25,7 @@ public class TickerQJobFunctions
         await _albumProcessingJob.RunProcessingJob(cancellationToken);
     }
 
-    [TickerFunction("AlbumProcessedPublisherJob")]
+    [TickerFunction("AlbumProcessedPublisherJob", "0 0 */1 * * *")]
     public async Task RunAlbumProcessedPublisherJob(
         TickerFunctionContext context,
         CancellationToken cancellationToken)

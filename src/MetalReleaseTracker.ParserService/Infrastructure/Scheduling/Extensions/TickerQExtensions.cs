@@ -1,9 +1,13 @@
+using MetalReleaseTracker.ParserService.Domain.Models.Entities;
 using MetalReleaseTracker.ParserService.Infrastructure.Data;
 using MetalReleaseTracker.ParserService.Infrastructure.Data.Entities;
+using MetalReleaseTracker.ParserService.Infrastructure.Jobs;
 using Microsoft.EntityFrameworkCore;
 using TickerQ.Dashboard.DependencyInjection;
 using TickerQ.DependencyInjection;
 using TickerQ.EntityFrameworkCore.DependencyInjection;
+using TickerQ.Utilities;
+using TickerQ.Utilities.Interfaces.Managers;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Scheduling.Extensions;
 
@@ -21,6 +25,9 @@ public static class TickerQExtensions
         var dashboardUsername = configuration.GetValue<string>("TickerQ:Dashboard:Username");
         var dashboardPassword = configuration.GetValue<string>("TickerQ:Dashboard:Password");
 
+        var parserDataSources = configuration.GetSection("ParserDataSources")
+            .Get<List<ParserDataSource>>() ?? [];
+
         services.AddTickerQ<CustomTimeTicker, CustomCronTicker>(tickerOptions =>
         {
             tickerOptions.ConfigureScheduler(schedulerOptions =>
@@ -31,6 +38,38 @@ public static class TickerQExtensions
                 schedulerOptions.FallbackIntervalChecker = TimeSpan.FromSeconds(30);
                 schedulerOptions.SchedulerTimeZone = TimeZoneInfo.Utc;
             });
+
+            tickerOptions.UseGZipCompression();
+            tickerOptions.SetExceptionHandler<TickerQExceptionHandler>();
+
+            tickerOptions.UseTickerSeeder(
+                async (ICronTickerManager<CustomCronTicker> cronManager) =>
+                {
+                    foreach (var source in parserDataSources)
+                    {
+                        var request = TickerHelper.CreateTickerRequest(source);
+
+                        await cronManager.AddAsync(new CustomCronTicker
+                        {
+                            Function = "CatalogueIndexJob",
+                            Request = request,
+                            Expression = "0 0 2 */3 * *",
+                            Description = $"Catalogue index every 3 days for {source.Name}",
+                            Retries = 2,
+                            RetryIntervals = [30000, 60000],
+                        });
+
+                        await cronManager.AddAsync(new CustomCronTicker
+                        {
+                            Function = "AlbumDetailParsingJob",
+                            Request = request,
+                            Expression = "0 0 8 */3 * *",
+                            Description = $"Album detail parsing every 3 days for {source.Name}",
+                            Retries = 2,
+                            RetryIntervals = [30000, 60000],
+                        });
+                    }
+                });
 
             if (dashboardEnabled)
             {
