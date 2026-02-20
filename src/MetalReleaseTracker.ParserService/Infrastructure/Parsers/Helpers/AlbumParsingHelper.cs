@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using MetalReleaseTracker.ParserService.Domain.Models.ValueObjects;
 
 namespace MetalReleaseTracker.ParserService.Infrastructure.Parsers.Helpers;
@@ -71,5 +72,21 @@ public static class AlbumParsingHelper
         }
 
         return 0.0f;
+    }
+
+    public static string StripMediaSuffix(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return name;
+        }
+
+        name = Regex.Replace(name, @"(\s+-\s+|/).*\b(CD|LP|Vinyl|Tape|Cassette|Musiccassette|Digipak|Digisleeve|Digipack)\b.*$", string.Empty);
+        name = Regex.Replace(name, @"\s+(Digipak|Digisleeve|Digipack|Musiccassette)\b.*$", string.Empty);
+        name = Regex.Replace(name, @"\s+[A-Z][A-Za-z\s,+-]*\b(CD|LP|Vinyl|Tape|Cassette|Musiccassette)\b.*$", string.Empty);
+        name = Regex.Replace(name, @"\s+CD$", string.Empty);
+        name = Regex.Replace(name, @"\s+EP$", string.Empty);
+
+        return name.Trim();
     }
 }

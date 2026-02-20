@@ -131,9 +131,11 @@ public class NapalmRecordsParser : BaseDistributorParser
         var titleNode = htmlDocument.DocumentNode.SelectSingleNode(NapalmRecordsSelectors.DetailTitle)
             ?? htmlDocument.DocumentNode.SelectSingleNode(NapalmRecordsSelectors.DetailTitleFallback);
 
-        return titleNode != null
+        var name = titleNode != null
             ? HtmlEntity.DeEntitize(titleNode.InnerText?.Trim() ?? string.Empty)
             : string.Empty;
+
+        return AlbumParsingHelper.StripMediaSuffix(name);
     }
 
     private string ParseAttribute(HtmlDocument htmlDocument, string attributeName)
