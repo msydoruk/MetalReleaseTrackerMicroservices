@@ -18,6 +18,7 @@ import FeedbackPage from './pages/FeedbackPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import authService from './services/auth';
+import ScrollToTop from './components/ScrollToTop';
 import { LanguageProvider } from './i18n/LanguageContext';
 
 // Create a dark theme for the metal music theme
@@ -191,6 +192,7 @@ function App() {
                 </Routes>
               </Box>
               <Footer />
+              <ScrollToTop />
             </Box>
           </Router>
         </LanguageProvider>
